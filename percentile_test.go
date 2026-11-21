@@ -1,6 +1,7 @@
 package mathx_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/alex-cos/mathx"
@@ -53,6 +54,17 @@ func TestPercentile(t *testing.T) {
 		output := mathx.Percentile(test.input, test.p)
 		assert.Equalf(t, test.expected, output, "test sample #%d", i)
 	}
+}
+
+func TestPercentile_NaN(t *testing.T) {
+	t.Parallel()
+	nan := math.NaN()
+
+	assert.True(t, math.IsNaN(mathx.Percentile([]float64{1, 2, 3}, nan)))
+	assert.True(t, math.IsNaN(mathx.Percentile([]float64{1}, nan)))
+	assert.True(t, math.IsNaN(float64(mathx.Percentile([]float32{1, 2, 3}, float32(nan)))))
+	// Empty input keeps its documented zero value.
+	assert.Equal(t, 0.0, mathx.Percentile([]float64{}, nan))
 }
 
 func TestMedian(t *testing.T) {

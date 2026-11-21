@@ -6,10 +6,15 @@ import (
 )
 
 // Percentile returns the p-th percentile of the values using linear interpolation.
+// p is expected in [0, 1] and is clamped to that range.
+// It returns 0 for empty values and NaN if p is NaN.
 func Percentile[F Float](values []F, p F) F {
 	n := len(values)
 	if n == 0 {
 		return 0
+	}
+	if math.IsNaN(float64(p)) {
+		return F(math.NaN())
 	}
 	if n == 1 {
 		return values[0]
