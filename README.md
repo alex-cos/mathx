@@ -178,7 +178,8 @@ Rounds a value at a given decimal precision to a specified increment.
 
 - **precision**: controls the decimal places (via p = 10^precision).
 - **increment**: if > 0, rounding targets multiples of the increment.
-- **upper**: if true, rounding pushes the result upward to the next increment when applicable.
+- **upper**: if true, rounds up (ceiling) to the next multiple of the increment, or to the given precision when the increment is 0. A value already on that grid is returned unchanged.
+- **Negative values** are handled consistently (`Rounded(-12.18978, 2, 0.05, false)` → `-12.20`); NaN and ±Inf are returned unchanged.
 - **Example**: `Rounded(12.18978, 2, 0.05, false)` → `12.20`
 
 ---
@@ -195,6 +196,7 @@ Computes the p-th percentile of the values (0 <= p <= 1) using linear interpolat
   - n==0 → 0
   - n==1 → the single value
   - p outside [0,1] clamps to ends
+  - p is NaN → NaN (empty slice still returns 0)
 - **Example**: `Percentile([]float64{1,2,3,4}, 0.5)` → `2.5`
 
 ---
