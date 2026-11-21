@@ -75,3 +75,59 @@ func TestComputeDistribution_Float32(t *testing.T) {
 	output := mathx.ComputeDistribution[float32, int32](input, interval, precision)
 	assert.Equal(t, expected, output)
 }
+
+func TestComputeDistribution_EqualValues(t *testing.T) {
+	t.Parallel()
+
+	type di = mathx.DistributionInterval[float64, int32]
+	assert.Equal(t, []di{{5, 5, 1}}, mathx.ComputeDistribution[float64, int32]([]float64{5}, 4, 2))
+	assert.Equal(t, []di{{5, 5, 3}}, mathx.ComputeDistribution[float64, int32]([]float64{5, 5, 5}, 4, 2))
+	assert.Equal(t, []di{{-2.5, -2.5, 2}}, mathx.ComputeDistribution[float64, int32]([]float64{-2.5, -2.5}, 4, 2))
+	assert.Equal(t, []di{{0, 0, 2}}, mathx.ComputeDistribution[float64, int32]([]float64{0, 0}, 3, 2))
+}
+
+func TestComputeDistribution_InvalidInterval(t *testing.T) {
+	t.Parallel()
+
+	values := []float64{1, 2, 3}
+	assert.Empty(t, mathx.ComputeDistribution[float64, int32](values, 0, 2))
+	assert.Empty(t, mathx.ComputeDistribution[float64, int32](values, -1, 2))
+	assert.NotNil(t, mathx.ComputeDistribution[float64, int32](values, -1, 2))
+	assert.Empty(t, mathx.ComputeDistribution[float64, int32](nil, 4, 2))
+}
+
+func TestComputeDistribution_Invariants(t *testing.T) {
+	t.Parallel()
+
+	var values []float64
+	for i := range 101 {
+		values = append(values, float64(i)/100)
+	}
+	inputs := [][]float64{
+		values,
+		{3.675, -2.897, 0.8674, -4.7107, 11.2057, 9.4547},
+		{1, 2, 3},
+		{-3, 0, 3},
+	}
+
+	for n, input := range inputs {
+		for _, interval := range []int{1, 2, 3, 4, 7, 10, 100} {
+			bins := mathx.ComputeDistribution[float64, int32](input, interval, 6)
+			if !assert.NotEmptyf(t, bins, "input #%d, interval %d", n, interval) {
+				continue
+			}
+
+			var total int32
+			for i, b := range bins {
+				total += b.Count
+				assert.Less(t, b.Inf, b.Sup)
+				if i > 0 {
+					// Contiguous intervals, no drift between bounds.
+					assert.Equalf(t, bins[i-1].Sup, b.Inf, "input #%d, interval %d, bin %d", n, interval, i)
+				}
+			}
+			assert.Equalf(t, int32(len(input)), total, "input #%d, interval %d", n, interval)
+			assert.LessOrEqual(t, len(bins), min(interval, len(input))+1)
+		}
+	}
+}
