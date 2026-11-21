@@ -268,13 +268,27 @@ func TestMaxDrawdown(t *testing.T) {
 	}{
 		{[]float64{}, 0},
 		{[]float64{-0.01}, -0.01},
-		{[]float64{-0.01, 0.02, -0.05, 0.01}, -0.040690000000000004},
-		{[]float64{0.01, 0.02, 0.03, -0.10, 0.01}, -0.04500459999999984},
-		{[]float64{-0.05, -0.03, -0.02}, -0.09693000000000007},
-		{[]float64{0.01, 0.02, 0.03}, 0.01},
+		// Peak 1.0098 then trough 0.95931: -5%, not the -4.07% cumulated return.
+		{[]float64{-0.01, 0.02, -0.05, 0.01}, -0.05},
+		// Peak after three gains, then a -10% day.
+		{[]float64{0.01, 0.02, 0.03, -0.10, 0.01}, -0.10},
+		// Never recovers: drawdown from the starting level.
+		{[]float64{-0.05, -0.03, -0.02}, -0.09693},
+		// Only gains: no drawdown.
+		{[]float64{0.01, 0.02, 0.03}, 0},
+		// The deepest of two drawdowns wins.
+		{[]float64{-0.02, 0.05, -0.10, 0.20, -0.05}, -0.10},
 	}
 	for i, test := range tests {
 		output := mathx.MaxDrawdown(test.input)
-		assert.Equalf(t, test.expected, output, "test sample #%d", i)
+		assert.InDeltaf(t, test.expected, output, 1e-12, "test sample #%d", i)
 	}
+}
+
+func TestMaxDrawdown_MatchesDrawdownSeries(t *testing.T) {
+	t.Parallel()
+	returns := []float64{-0.01506, 0, 0.006, -0.00778, 0.0017, -0.00534, 0.02, -0.03}
+
+	assert.Equal(t, mathx.Min(mathx.ComputeDrawdownFromDR(returns)), mathx.MaxDrawdown(returns))
+	assert.LessOrEqual(t, mathx.MaxDrawdown(returns), 0.0)
 }

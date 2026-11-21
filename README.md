@@ -447,9 +447,12 @@ Computes cumulative performance from daily returns.
 MaxDrawdown[N Number](dailyReturns []N) N
 ```
 
-Returns the maximum drawdown from daily returns.
+Returns the maximum drawdown from daily returns: the largest peak-to-trough loss of the cumulated performance (a value in [-1, 0]). It is the minimum of `ComputeDrawdownFromDR`.
 
-- **Example**: `MaxDrawdown([]float64{-0.01, 0.02, -0.05})` → `-0.0406...`
+- **Edge cases**:
+  - empty slice → 0
+  - only gains (never below the starting level) → 0
+- **Example**: `MaxDrawdown([]float64{-0.01, 0.02, -0.05})` → `-0.05`
 
 ---
 

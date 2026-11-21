@@ -76,20 +76,5 @@ func ComputeCumulPerfFromDR[N Number](dailyReturns []N) []N {
 
 // MaxDrawdown returns the maximum drawdown from daily returns.
 func MaxDrawdown[N Number](dailyReturns []N) N {
-	nb := len(dailyReturns)
-	if nb == 0 {
-		return 0
-	}
-	cumulReturns := make([]N, nb)
-	cumulReturns[0] = dailyReturns[0]
-	for i := 1; i < nb; i++ {
-		cumulReturns[i] = (1+cumulReturns[i-1])*(1+dailyReturns[i]) - 1
-	}
-	maxDrawdown := cumulReturns[0]
-	for i := 1; i < nb; i++ {
-		if cumulReturns[i] < maxDrawdown {
-			maxDrawdown = cumulReturns[i]
-		}
-	}
-	return maxDrawdown
+	return Min(ComputeDrawdownFromDR(dailyReturns))
 }
